@@ -27,5 +27,4 @@ RANGE_LIST = [
 ]
 
 ADMIN_LIST = list(map(int, os.getenv("ADMIN_LIST").split(',')))
-logger.info(f'{ADMIN_LIST=}')
 SPREADSHEET_ID = str(os.getenv("SPREADSHEET_ID"))

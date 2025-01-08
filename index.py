@@ -84,7 +84,6 @@ async def help(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def add_member(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     if not update.effective_user.id in ADMIN_LIST:
-        logger.info('ff')
         return
     
     print(f'{update.message.text=}')
