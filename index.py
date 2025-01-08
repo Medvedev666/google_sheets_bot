@@ -10,7 +10,7 @@ from telegram.constants import ParseMode
 
 from datetime import datetime
 
-from config.config import TOKEN, ADMIN_LIST
+from config.config import TOKEN, ADMIN_LIST, logger
 from config.functions import make_buttons, clean_data, check_user_data
 from config.list import buttons_add, main_menu
 from config.db import db
@@ -84,6 +84,7 @@ async def help(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def add_member(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     if not update.effective_user.id in ADMIN_LIST:
+        logger.info('ff')
         return
     
     print(f'{update.message.text=}')
