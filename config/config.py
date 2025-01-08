@@ -27,4 +27,5 @@ RANGE_LIST = [
 ]
 
 ADMIN_LIST = os.getenv("ADMIN_LIST")
+logger.info(f'{ADMIN_LIST=}')
 SPREADSHEET_ID = str(os.getenv("SPREADSHEET_ID"))
