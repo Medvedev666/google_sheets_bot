@@ -26,6 +26,6 @@ RANGE_LIST = [
     'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x',	'y', 'z'
 ]
 
-ADMIN_LIST = os.getenv("ADMIN_LIST")
+ADMIN_LIST = list(map(int, os.getenv("ADMIN_LIST").split(',')))
 logger.info(f'{ADMIN_LIST=}')
 SPREADSHEET_ID = str(os.getenv("SPREADSHEET_ID"))
