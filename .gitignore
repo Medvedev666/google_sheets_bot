@@ -1,0 +1,7 @@
+venv/
+.venv/
+__pycache__/
+config/__pycache__/
+users.sqlite3
+config/credentials/
+.env
