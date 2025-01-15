@@ -20,8 +20,10 @@ class Database():
                 "id INTEGER PRIMARY KEY, "
                 "user_id BIGINT, "
                 "username TEXT, "
+                "phone TEXT, "
                 "first_name TEXT, "
                 "last_name TEXT, "
+                "fio TEXT, "
                 "complex TEXT, "
                 "machine TEXT, "
                 "member INTEGER DEFAULT 0);"
@@ -65,22 +67,39 @@ class Database():
         except Exception as e:
             logger.error(f'Error in update_user_data: {e}')
             logger.error(f"{traceback.format_exc()}")
+
+
     
-
-
-    def check_user(self, user_id):
-        result = self.cursor.execute("SELECT complex, machine, member FROM users WHERE user_id = ?", (user_id,))
-        return result.fetchone()
-    
-
-    def update_user_member(self, user_id):
+    def update_user_phone(self, user_id, phone):
         try:
             result = self.cursor.execute("SELECT * FROM users WHERE user_id = ?", (user_id,))
 
             if result.fetchone():
                 self.cursor.execute(
-                    "UPDATE users SET member = ? WHERE user_id = ?", 
-                    (1, user_id)
+                    "UPDATE users SET phone = ? WHERE user_id = ?", 
+                    (phone, user_id)
+                )
+                self.connection.commit()
+                
+        except Exception as e:
+            logger.error(f'Error in update_user_data: {e}')
+            logger.error(f"{traceback.format_exc()}")
+    
+
+
+    def check_user(self, user_id):
+        result = self.cursor.execute("SELECT complex, machine, member, fio FROM users WHERE user_id = ?", (user_id,))
+        return result.fetchone()
+    
+
+    def update_user_member(self, user_id, fio, complex, machine):
+        try:
+            result = self.cursor.execute("SELECT * FROM users WHERE user_id = ?", (user_id,))
+
+            if result.fetchone():
+                self.cursor.execute(
+                    "UPDATE users SET member = ?, fio = ?, complex = ?, machine = ? WHERE user_id = ?", 
+                    (1, fio, complex, machine, user_id)
                 )
                 self.connection.commit()
                 

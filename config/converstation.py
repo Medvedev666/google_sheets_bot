@@ -31,7 +31,7 @@ async def finish_text(context, update, user_data_key):
 Описание: {context.user_data['description']}
 Информация-размеры: {context.user_data['info']}
 Пояснение о запчасти: {context.user_data['comment']}</b>\n
-Что бы отправить запись в таблицу, нажмите "Добавить" """
+Что бы отправить запись, нажмите "Отправить заявку" """
     
     await context.bot.send_message(
         chat_id=update.effective_chat.id, 
@@ -49,7 +49,6 @@ async def send_text(context, user_id, text, state):
     await context.bot.send_message(
         chat_id=user_id, 
         text=f"{text}:\nВведите '/cancel' для отмены", 
-        reply_markup=await keyboard(['/cancel'])
     )
     return state
 
@@ -58,9 +57,9 @@ async def send_text(context, user_id, text, state):
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Отмена и завершение диалога."""
-    await context.bot.send_message(chat_id=update.effective_chat.id, 
-                                   text="Отмена",
-                                   reply_markup=ReplyKeyboardRemove())
+    # await context.bot.send_message(chat_id=update.effective_chat.id, 
+    #                                text="Отмена",
+    #                                reply_markup=ReplyKeyboardRemove())
     await finish_text(context, update, '')
 
 

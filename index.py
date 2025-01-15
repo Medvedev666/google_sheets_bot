@@ -1,10 +1,12 @@
-from telegram import Update, ReplyKeyboardRemove
+from telegram import Update, ReplyKeyboardRemove, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import (
+    filters, 
     ApplicationBuilder, 
     ContextTypes, 
     CommandHandler, 
     CallbackContext, 
     CallbackQueryHandler,
+    MessageHandler,
 )
 from telegram.constants import ParseMode
 
@@ -15,7 +17,7 @@ from config.functions import make_buttons, clean_data, check_user_data
 from config.list import buttons_add, main_menu
 from config.db import db
 from config.utils import create_conversation_handler
-from config.functions_sheets_api import handle_data_for_google_spreadsheet
+from config.functions_sheets_api import handle_data_for_google_spreadsheet, get_number_from_google_spreadsheet
 
 
 
@@ -58,9 +60,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                                             ]))
 
     else:
-        await context.bot.send_message(
-            chat_id=update.effective_chat.id, 
-            text=f'Ваш ИД: {update.effective_user.id}'
+        button = KeyboardButton("Поделиться номером", request_contact=True)
+        reply_markup = ReplyKeyboardMarkup([[button]], resize_keyboard=True)
+
+        # Отправляем сообщение с клавиатурой
+        await update.message.reply_text(
+            text=f'Ваш ИД: {update.effective_user.id}',
+            reply_markup=reply_markup
         )
     
 
@@ -110,17 +116,8 @@ async def callback_handler(update: Update, context: CallbackContext):
     if member[2] != 1:
         return
     
-    if callback_data == 'add':
-        
-        await clean_data(context)
-        await context.bot.edit_message_text(chat_id=update.effective_chat.id, message_id=call.message.message_id,
-                            text='Новая запись:\n\n\nВыберите ячейку для заполнения\n'
-                            'Что бы отправить запись в таблицу, нажмите "Добавить"', 
-                            parse_mode=ParseMode.HTML,
-                            reply_markup=await make_buttons(buttons_add))
-    
 
-    elif callback_data == 'evro3' or callback_data == 'evro5':
+    if callback_data == 'evro3' or callback_data == 'evro5':
         member = db.check_user(user_id)
         if member[2] == 1 and member[0] and member[1]:
             return
@@ -149,6 +146,25 @@ async def callback_handler(update: Update, context: CallbackContext):
                             text=f'Вы успешно зарегестрированны', 
                             reply_markup=await make_buttons(main_menu))
         
+    
+    elif member[2] == 1 and (not member[0] or not member[1]):
+
+        await context.bot.send_message(chat_id=update.effective_chat.id, 
+                text=f'Здравствуйте <b>{update.effective_user.first_name}</b> 👋\n'
+                      'Процесс регистрации:\nВыберите № Комплекса', 
+                parse_mode=ParseMode.HTML, reply_markup=await make_buttons([
+                                                ('Евро3', 'evro3'), ('Евро5', 'evro5')
+                                            ]))
+        
+    elif callback_data == 'add':
+        
+        await clean_data(context)
+        await context.bot.edit_message_text(chat_id=update.effective_chat.id, message_id=call.message.message_id,
+                            text='Новая запись:\n\n\nВыберите ячейку для заполнения\n'
+                            'Что бы отправить запись в таблицу, нажмите "Отправить заявку"', 
+                            parse_mode=ParseMode.HTML,
+                            reply_markup=await make_buttons(buttons_add))
+        
 
     elif callback_data == 'add-complate':
 
@@ -160,8 +176,7 @@ async def callback_handler(update: Update, context: CallbackContext):
         description = context.user_data['description']
         info = context.user_data['info']
         comment = context.user_data['comment']
-        name = f'{update.effective_user.first_name} {update.effective_user.username} {user_id}'
-        evro, car, _ = db.check_user(user_id)
+        evro, car, _, name = db.check_user(user_id)
 
 
         values = [
@@ -193,6 +208,34 @@ async def callback_handler(update: Update, context: CallbackContext):
 
 
 
+async def message_func(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    
+    mes = update.message
+
+    
+    if mes.contact:
+        phone_number = str(mes.contact.phone_number)
+        user_id = mes.contact.user_id
+
+        db.update_user_phone(user_id, phone_number)
+        results = get_number_from_google_spreadsheet()
+
+        print(results)
+
+        for result in results:
+            if phone_number in result:
+                print(f'{results=}')
+                print(f'{phone_number=}')
+                print(f'{result[0]=}')
+                
+                db.update_user_member(user_id, result[0], result[2], result[3])
+
+                await context.bot.send_message(chat_id=update.effective_chat.id,
+                            text=f'Доступ предоставлен\n\nГлавное меню', 
+                            reply_markup=await make_buttons(main_menu))
+
+
+
 
 def main():
     start_handler = CommandHandler('start', start)
@@ -206,6 +249,8 @@ def main():
     conv_comment = create_conversation_handler('comment')
     # inline
     call_back_query = CallbackQueryHandler(callback_handler)
+    # message
+    mes_henler = MessageHandler(filters.ALL, message_func)
 
     
     application.add_handler(start_handler)
@@ -219,6 +264,8 @@ def main():
     application.add_handler(conv_comment)
     # inline
     application.add_handler(call_back_query)
+    # message
+    application.add_handler(mes_henler)
 
     application.run_polling()
 
